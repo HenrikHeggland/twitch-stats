@@ -69,8 +69,6 @@ const TwitchChat = () => {
           const [, username, message] = parsedData;
           const newMessage = { username, message };
           setChat((prevChat) => [...prevChat, newMessage]);
-
-          // Move the setUserMessageCounts call inside the if block where username is defined
           setUserMessageCounts((prevCounts) => {
             const existingUser = prevCounts.find(
               (u) => u.username === username
@@ -138,14 +136,6 @@ const TwitchChat = () => {
               {user.username}: {user.messageCount}
             </p>
           ))}
-      </div>
-      <br />
-      <div>
-        {chat.map((message, index) => (
-          <p key={index}>
-            {message.username}: {message.message}
-          </p>
-        ))}
       </div>
     </>
   );
