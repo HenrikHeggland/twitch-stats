@@ -1,10 +1,10 @@
 import "./App.css";
-import Vite from "./components/vite";
+import Home from "./components/Home";
 
 function App() {
   return (
     <div className="App">
-      <Vite />
+      <Home />
     </div>
   );
 }
