@@ -31,12 +31,15 @@ const TwitchChat = () => {
     const websocket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 
     websocket.onopen = () => {
+      console.log("WebSocket connection opened.");
       websocket.send(`PASS oauth:${accessToken}`);
       websocket.send(`NICK ${import.meta.env.VITE_REACT_APP_TWITCH_USERNAME}`);
       websocket.send(`JOIN #${streamer}`);
+      console.log(`Joined channel: ${streamer}`);
     };
 
     websocket.onmessage = (event) => {
+      console.log("Message received:", event.data);
       // Simple parsing logic to extract username and message
       const parsedData = event.data.match(
         /:(\w+)!\w+@\w+.tmi.twitch.tv PRIVMSG #\w+ :(.+)/
