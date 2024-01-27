@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 
 type ChatMessage = {
-  // Define the message structure here.
   username: string;
   message: string;
 };
@@ -10,22 +9,15 @@ type UserMessageCount = {
   username: string;
   messageCount: number;
 };
-
 const TwitchChat = () => {
-  // State variables declarations
   const [streamer, setStreamer] = useState("");
-  const [chat, setChat] = useState<ChatMessage[]>([]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [chat, setChat] = useState<ChatMessage[]>([]);
   const [userMessageCounts, setUserMessageCounts] = useState<
     UserMessageCount[]
   >([]);
 
-  // Function to clear chat messages
-  const handleClearMessages = () => {
-    setChat([]);
-    setUserMessageCounts([]);
-  };
   // Function to parse the access token from URL query parameters
   const parseAccessToken = () => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -58,7 +50,8 @@ const TwitchChat = () => {
 
     // Handle incoming messages
     websocket.onmessage = (event) => {
-      console.log("Message received:", event.data);
+      // For debugging
+      // console.log("Message received:", event.data);
 
       if (event.data.includes("PRIVMSG")) {
         // This is a chat message
@@ -69,19 +62,22 @@ const TwitchChat = () => {
           const [, username, message] = parsedData;
           const newMessage = { username, message };
           setChat((prevChat) => [...prevChat, newMessage]);
+
           setUserMessageCounts((prevCounts) => {
-            const existingUser = prevCounts.find(
+            const updatedCounts = prevCounts.map((u) => ({ ...u }));
+            const userIndex = updatedCounts.findIndex(
               (u) => u.username === username
             );
-            if (existingUser) {
-              return prevCounts.map((u) =>
-                u.username === username
-                  ? { ...u, messageCount: u.messageCount + 1 }
-                  : u
-              );
+
+            if (userIndex !== -1) {
+              updatedCounts[userIndex].messageCount++;
             } else {
-              return [...prevCounts, { username, messageCount: 1 }];
+              updatedCounts.push({ username, messageCount: 1 });
             }
+
+            return updatedCounts
+              .sort((a, b) => b.messageCount - a.messageCount)
+              .slice(0, 10);
           });
         }
       }
@@ -105,9 +101,13 @@ const TwitchChat = () => {
     }
   };
 
+  // Clear leaderboard
+  const handleClearLeaderboard = () => {
+    setUserMessageCounts([]);
+  };
+
   useEffect(() => {
     parseAccessToken();
-
     return () => {
       if (ws) {
         ws.close();
@@ -117,25 +117,22 @@ const TwitchChat = () => {
 
   return (
     <>
-      <br />
       <h3>Input a channel name to connect to the chat</h3>
       <input
         type="text"
         value={streamer}
         onChange={(e) => setStreamer(e.target.value)}
       />
-      <button onClick={handleConnect}>✅</button>
-      <button onClick={handleDisconnect}>❎</button>
-      <button onClick={handleClearMessages}>🔁</button>
-      <br />
-      <div>
-        {userMessageCounts
-          .sort((a, b) => b.messageCount - a.messageCount)
-          .map((user, index) => (
-            <p key={index}>
-              {user.username}: {user.messageCount}
-            </p>
-          ))}
+      <button onClick={handleConnect}>Connect</button>
+      <button onClick={handleDisconnect}>Disconnect</button>
+      <button onClick={handleClearLeaderboard}>Clear Leaderboard</button>
+      <div className="leaderboard">
+        {userMessageCounts.map((user, index) => (
+          <div key={index} className="leaderboard-entry">
+            <span className="username">{user.username}</span>:
+            <span className="message-count">{user.messageCount}</span>
+          </div>
+        ))}
       </div>
     </>
   );
